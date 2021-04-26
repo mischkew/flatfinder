@@ -1,1 +1,7 @@
 node_modules
+
+dev.db
+prod.db
+
+config.dev.js
+config.prod.js

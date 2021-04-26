@@ -1,3 +1,6 @@
+// This file is not used right now. Leaving it here as an example, in case we
+// want to automate the contact forms in the future.
+
 const puppeteer = require("puppeteer");
 
 const USER_AGENT =
