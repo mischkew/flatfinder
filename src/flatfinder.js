@@ -42,11 +42,13 @@ async function findFlatsAndNotify() {
       return;
     }
 
+    console.debug(`Notifying about a total of ${listings.length} listings.`);
     const notifier = new Notifier(config.telegram);
     await notifier.sendUpdateTitle(listings);
+
     for (let listing of listings) {
       console.debug(
-        `  - Add listing ${listing.id}: ${listing.title} | ${listing.url}`
+        ` - Add listing ${listing.id}: ${listing.title} | ${listing.url}`
       );
       await notifier.sendListing(listing);
     }
