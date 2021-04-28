@@ -11,8 +11,15 @@ const CRAWLERS = {
 /**
  * Executes the flat-notification job. This launches all url-queries for all
  * crawlers and sends a Telegram notification for each uniquely new listing.
+ *
+ * @param dryRun {bool} If true, don't send the telegram messages but only log
+ * them. No persistence is performed.
  */
-async function findFlatsAndNotify() {
+async function findFlatsAndNotify(dryRun) {
+  if (dryRun) {
+    console.debug("Execute as dry run.");
+  }
+
   async function findFlats() {
     let allListings = [];
     for (let crawlerName in CRAWLERS) {
@@ -44,20 +51,22 @@ async function findFlatsAndNotify() {
 
     console.debug(`Notifying about a total of ${listings.length} listings.`);
     const notifier = new Notifier(config.telegram);
-    await notifier.sendUpdateTitle(listings);
+    await notifier.sendUpdateTitle(listings, dryRun);
 
     for (let listing of listings) {
       console.debug(
         ` - Add listing ${listing.id}: ${listing.title} | ${listing.url}`
       );
-      await notifier.sendListing(listing);
+      await notifier.sendListing(listing, dryRun);
     }
 
-    await store.insertListing(listings);
+    if (!dryRun) {
+      await store.insertListing(listings);
+    }
   }
 
   const listings = await findFlats();
-  return notify(listings);
+  return notify(listings).catch(console.error);
 }
 
 module.exports = findFlatsAndNotify;

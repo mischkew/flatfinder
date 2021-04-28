@@ -8,23 +8,33 @@ class Notifier {
     this.bot = new TelegramBot(this.token);
   }
 
-  async sendUpdateTitle(listings) {
+  async sendUpdateTitle(listings, dryRun) {
     let message;
     if (listings.length > 1) {
       message = `*Found ${listings.length} new listing, yay* ` + "\u{1F389}";
     } else {
       message = "*Found a new listing, yay* \u{1F389}";
     }
-    return this.bot.sendMessage(this.chatId, message);
+
+    if (dryRun) {
+      console.debug(`DRY-RUN - message to ${this.chatId} - ${message}`);
+    } else {
+      return this.bot.sendMessage(this.chatId, message);
+    }
   }
 
-  async sendListing(listing) {
+  async sendListing(listing, dryRun) {
     const title = `<a href="${listing.url}"><b>${listing.title}</b></a>\n`;
     const rooms = `Rooms: <code>${listing.rooms}</code>\n`;
     const size = `Size: <code>${listing.size}m²</code>\n`;
     const price = `Price: <code>${listing.price}€</code>\n`;
     const message = title + rooms + size + price;
-    return this.bot.sendMessage(this.chatId, message, { parse_mode: "HTML" });
+
+    if (dryRun) {
+      console.debug(`DRY-RUN - message to ${this.chatId} - ${message}`);
+    } else {
+      return this.bot.sendMessage(this.chatId, message, { parse_mode: "HTML" });
+    }
   }
 }
 

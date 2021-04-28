@@ -18,4 +18,4 @@ function patchConsole() {
 patchConsole();
 
 const flatfinder = require("./flatfinder");
-flatfinder();
+flatfinder(!!process.env.DRY_RUN);
