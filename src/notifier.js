@@ -11,7 +11,7 @@ class Notifier {
   async sendUpdateTitle(listings, dryRun) {
     let message;
     if (listings.length > 1) {
-      message = `*Found ${listings.length} new listing, yay* ` + "\u{1F389}";
+      message = `*Found ${listings.length} new listings, yay* ` + "\u{1F389}";
     } else {
       message = "*Found a new listing, yay* \u{1F389}";
     }
