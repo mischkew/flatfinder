@@ -65,7 +65,12 @@ async function queryImmoscout(url) {
     );
   }
 
-  const entries = results.resultlistEntries[0].resultlistEntry || [];
+  let entries = results.resultlistEntries[0].resultlistEntry || [];
+  // The API might only return a single result, we always want to wrap the
+  // results in a list.
+  if (!Array.isArray(entries)) {
+    entries = [entries];
+  }
 
   // If the results are paginated, query the next pages as well.
   if (!results.paging) {
