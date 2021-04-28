@@ -20,6 +20,8 @@ async function findFlatsAndNotify(dryRun) {
     console.debug("Execute as dry run.");
   }
 
+  const notifier = new Notifier(config.telegram);
+
   async function findFlats() {
     let allListings = [];
     for (let crawlerName in CRAWLERS) {
@@ -50,7 +52,6 @@ async function findFlatsAndNotify(dryRun) {
     }
 
     console.debug(`Notifying about a total of ${listings.length} listings.`);
-    const notifier = new Notifier(config.telegram);
     await notifier.sendUpdateTitle(listings, dryRun);
 
     for (let listing of listings) {
@@ -66,7 +67,10 @@ async function findFlatsAndNotify(dryRun) {
   }
 
   const listings = await findFlats();
-  return notify(listings).catch(console.error);
+  return notify(listings).catch((error) => {
+    console.error(error);
+    notifier.bot.sendMessage("Boi, there is an error. Check the logs...");
+  });
 }
 
 module.exports = findFlatsAndNotify;
