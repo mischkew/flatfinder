@@ -5,7 +5,7 @@ WORKDIR /app
 COPY ["./package.json", "./yarn.lock", "./"]
 RUN yarn install --no-progress
 
-COPY ["./src", "./config.prod.js", "./"]
+COPY ["./src", "./config.*.js", "./"]
 RUN mkdir /data \  
     && echo -e '#! /bin/sh\nnode /app/index.js' >"/etc/periodic/15min/start" \
     && chmod +x "/etc/periodic/15min/start"

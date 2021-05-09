@@ -15,6 +15,8 @@ if (!fs.existsSync(configPath)) {
     `Config file not found at ${configPath}. Did you create a copy of config.example.js` +
       ` and placed it at ${configPath}?`
   );
+} else {
+  console.debug(`Using config ${configPath} in ${environment} environment.`);
 }
 
 const config = require(configPath);

@@ -3,6 +3,8 @@ version: "3.3"
 services:
   flatfinder:
     image: flatfinder
+    environment:
+      - CONFIG_PATH
     volumes:
       - db:/data/
 
