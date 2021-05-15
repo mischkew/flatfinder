@@ -13,13 +13,14 @@ module.exports = {
   // Interval in ms in which the immoscout website is queried for new updates
   updateInterval: 1000 * 60 * 15,
 
-  // The interval in ms in which to poll updates from the Telgram API. The
-  // higher the interval, the longer the bot needs to respond to user commands.
-  // Does not require a webserver, SSL certificates and a domain name. Easier to
-  // run than a webhook-based bot, but less performant. Useful for dev
-  // environments but recommend webhooks for production. Set the interval to 0
-  // to disable it and use the webhook.
-  pollingInterval: 1000,
+  // The interval in seconds on how long to keep a connection to the
+  // Telegram server open for long-polling
+  // (https://en.wikipedia.org/wiki/Push_technology#Long_polling).
+  // Does not require a webserver, SSL certificates and a domain
+  // name. Easier to run than a webhook-based bot. Useful for dev
+  // environments but recommend webhooks for production. Set the
+  // interval to 0 to disable it and use the webhook.
+  pollingInterval: 60,
 
   webhook: {
     // The url the Telegram API should call to send updates
