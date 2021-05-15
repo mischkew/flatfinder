@@ -8,6 +8,10 @@
     "nedb": "^1.8.0"
   },
   "scripts": {
-    "start": "node ./src/index.js"
+    "start": "node ./src/index.js",
+    "ngrok": "npx ngrok http --region eu 8000"
+  },
+  "devDependencies": {
+    "ngrok": "^4.0.1"
   }
 }

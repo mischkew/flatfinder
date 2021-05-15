@@ -1,76 +1,93 @@
 /* This module executes all crawlers for all defined queries, diffs the results
 against the database and sents notifications for new "listings". */
 
-const { config } = require("./config");
-const store = require("./store");
-const Notifier = require("./notifier");
-const CRAWLERS = {
-  immoscout: require("./crawlers/immoscout"),
-};
+const { keepNewListings, insertListing, findChats } = require("./store");
+const crawler = require("./crawler");
+const { TelegramBot } = require("./telegram");
+
+async function crawlFlats(chatId, url) {
+  console.debug(`- Crawl URL: ${url}`);
+
+  const listings = await crawler(chatId, url);
+  console.log(`- Found ${listings.length} listings`);
+
+  const newListings = await keepNewListings(chatId, listings);
+  console.log(`- Found ${newListings.length} new listings`);
+
+  return newListings;
+}
+
+async function sendUpdateTitle(bot, chatId, listings) {
+  let message;
+  if (listings.length > 1) {
+    message = `*Found ${listings.length} new listings, yay* ` + "\u{1F389}";
+  } else {
+    message = "*Found a new listing, yay* \u{1F389}";
+  }
+
+  return bot.sendMessage(chatId, message);
+}
+
+async function sendListing(bot, chatId, listing) {
+  const title = `<a href="${listing.url}"><b>${listing.title}</b></a>\n`;
+  const rooms = `Rooms: <code>${listing.rooms}</code>\n`;
+  const size = `Size: <code>${listing.size}m²</code>\n`;
+  const price = `Price: <code>${listing.price}€</code>\n`;
+  const message = title + rooms + size + price;
+
+  return bot.sendMessage(chatId, message, { parse_mode: "HTML" });
+}
+
+async function notify(bot, chatId, listings) {
+  if (listings.length === 0) {
+    return;
+  }
+
+  console.debug(`Notifying about a total of ${listings.length} listings.`);
+  await sendUpdateTitle(bot, chatId, listings);
+  for (let listing of listings) {
+    console.debug(
+      `  - Add listing ${listing.id}: ${listing.title} | ${listing.url}`
+    );
+    await sendListing(bot, chatId, listing);
+  }
+  await insertListing(listings);
+}
+
+/**
+ * @param {TelegramBot} bot
+ * @param {Chat} chat
+ */
+async function crawlFlatsAndNotify(bot, chat) {
+  if (chat.running && chat.searchUrl) {
+    console.log(`Crawl chat ${chat.chatId} (${chat.firstName})`);
+    const listings = await crawlFlats(chat.chatId, chat.searchUrl);
+    await notify(bot, chat.chatId, listings);
+  } else if (!chat.running) {
+    console.log(
+      `Chat ${chat.chatId} (${chat.firstName}) is paused. Skip crawling.`
+    );
+  } else {
+    console.log(
+      `Chat ${chat.chatId} (${chat.firstName}) has no url set. Skip crawling.`
+    );
+  }
+}
 
 /**
  * Executes the flat-notification job. This launches all url-queries for all
  * crawlers and sends a Telegram notification for each uniquely new listing.
- *
- * @param dryRun {bool} If true, don't send the telegram messages but only log
- * them. No persistence is performed.
+ * @param {TelegramBot} bot
  */
-async function findFlatsAndNotify(dryRun) {
-  if (dryRun) {
-    console.debug("Execute as dry run.");
+async function crawlFlatsAndNotifyAll(bot) {
+  const chats = await findChats();
+  console.log(`Found ${chats.length} registered chats.`);
+  for (let chat of chats) {
+    await crawlFlatsAndNotify(bot, chat);
   }
-
-  const notifier = new Notifier(config.telegram);
-
-  async function findFlats() {
-    let allListings = [];
-    for (let crawlerName in CRAWLERS) {
-      console.log(`Crawling listings for ${crawlerName}.`);
-
-      const crawler = CRAWLERS[crawlerName];
-      const urls = config[crawlerName].urls;
-      for (let index in urls) {
-        const url = urls[index];
-        console.log(`${crawlerName} ${parseInt(index) + 1}/${urls.length}`);
-        console.debug(`Crawl URL: ${url}`);
-
-        const listings = await crawler(url);
-        console.log(` - Found ${listings.length} listings`);
-
-        const newListings = await store.keepNewListings(listings);
-        console.log(` - Found ${newListings.length} new listings`);
-
-        allListings = allListings.concat(newListings);
-      }
-    }
-    return allListings;
-  }
-
-  async function notify(listings) {
-    if (listings.length === 0) {
-      return;
-    }
-
-    console.debug(`Notifying about a total of ${listings.length} listings.`);
-    await notifier.sendUpdateTitle(listings, dryRun);
-
-    for (let listing of listings) {
-      console.debug(
-        ` - Add listing ${listing.id}: ${listing.title} | ${listing.url}`
-      );
-      await notifier.sendListing(listing, dryRun);
-    }
-
-    if (!dryRun) {
-      await store.insertListing(listings);
-    }
-  }
-
-  const listings = await findFlats();
-  return notify(listings).catch((error) => {
-    console.error(error);
-    notifier.bot.sendMessage("Boi, there is an error. Check the logs...");
-  });
 }
 
-module.exports = findFlatsAndNotify;
+module.exports = {
+  crawlFlatsAndNotify,
+  crawlFlatsAndNotifyAll,
+};

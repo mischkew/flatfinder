@@ -5,13 +5,13 @@ crawler is used by the flat finder to prepare notifications for new listings. */
 const assert = require("assert");
 const axios = require("axios").default;
 
-const { makeListing, SourceType } = require("../store");
+const { makeListing, SourceType } = require("./store");
 
 function makeLink(id) {
   return `https://www.immobilienscout24.de/expose/${id}`;
 }
 
-function makeImmoscoutListing(resultEntry) {
+function makeImmoscoutListing(chatId, resultEntry) {
   assert("resultlist.realEstate" in resultEntry);
 
   const realEstate = resultEntry["resultlist.realEstate"];
@@ -23,6 +23,7 @@ function makeImmoscoutListing(resultEntry) {
   assert("title" in realEstate);
 
   return makeListing(
+    chatId,
     {
       id: realEstate["@id"],
       sourceType: SourceType.IMMOSCOUT,
@@ -78,7 +79,7 @@ async function queryImmoscout(url) {
   }
   if (results.paging.next && results.paging.next["@xlink.href"]) {
     const host = res.request.protocol + "//" + res.request.host;
-    const nextEntries = await queryListing(
+    const nextEntries = await queryImmoscout(
       host + results.paging.next["@xlink.href"]
     );
     entries.concat(nextEntries);
@@ -87,9 +88,9 @@ async function queryImmoscout(url) {
   return entries;
 }
 
-async function queryListings(url) {
+async function queryListings(chatId, url) {
   const entries = await queryImmoscout(url);
-  return entries.map(makeImmoscoutListing);
+  return entries.map((entry) => makeImmoscoutListing(chatId, entry));
 }
 
 module.exports = queryListings;

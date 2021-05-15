@@ -1,7 +1,5 @@
 node_modules
+yarn-error.log
 
-dev.db
-prod.db
-
-config.dev.js
-config.prod.js
+*.db
+config.*.js
