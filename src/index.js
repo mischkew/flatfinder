@@ -56,7 +56,7 @@ async function main() {
   const protocol = makeProtocol();
   console.debug("Crawl listings");
   await crawlFlatsAndNotifyAll(protocol.bot);
-  setInterval(crawlFlatsAndNotifyAll, config.updateInterval);
+  setInterval(crawlFlatsAndNotifyAll, config.updateInterval, protocol.bot);
 
   if (config.pollingInterval > 0) {
     console.debug("Using polling mode");
