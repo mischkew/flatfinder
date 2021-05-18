@@ -68,7 +68,7 @@ function isUrl(url) {
       protocol === "https:" &&
       host === "www.immobilienscout24.de" &&
       pathname.startsWith("/Suche") &&
-      pathname.endsWith("wohnung-mieten") &&
+      pathname.includes("wohnung") &&
       search.length > 0
     );
   } catch (error) {
